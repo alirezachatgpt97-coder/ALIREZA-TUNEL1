@@ -1,0 +1,111 @@
+<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>راهنمای آپلود ALIREZATUNEL</title><style>body{font:18px/1.9 Tahoma,sans-serif;max-width:820px;margin:40px auto;padding:20px;background:#f5f7fb;color:#172033}main{background:white;padding:28px;border-radius:16px}a.button{display:inline-block;padding:12px 22px;background:#086f62;color:white;border-radius:9px;text-decoration:none}code,pre{direction:ltr;unicode-bidi:embed;overflow-wrap:anywhere}textarea{width:100%;height:260px;direction:ltr;text-align:left}small{color:#495367}</style><main><h1>نصب ALIREZATUNEL از مخزن جدید</h1><p>این راهنما فایل گمشدهٔ ساخت را در مسیر درست آماده می‌کند. به حساب گیت‌هاب مالک مخزن وارد باشید.</p><ol><li>ZIP اصلی را استخراج و محتویات آن را در ریشهٔ <a href="https://github.com/alirezachatgpt97-coder/ALIREZA-TUNEL1/upload/main" target="_blank" rel="noopener">مخزن ALIREZA-TUNEL1</a> آپلود و Commit کنید. فایل ALIREZATUNEL-SOURCE.zip را استخراج نکنید.</li><li>اگر .github/workflows/build.yml در مخزن دیده نمی‌شود، دکمهٔ زیر را بزنید. در صفحهٔ گیت‌هاب بررسی کنید نام فایل و متن آن پر شده باشد؛ سپس Commit changes را بزنید. فایل build.yml در ریشه به‌تنهایی ساخت را اجرا نمی‌کند.</li></ol><p><a class="button" href="https://github.com/alirezachatgpt97-coder/ALIREZA-TUNEL1/new/main?filename=.github%2Fworkflows%2Fbuild.yml&amp;value=name%3A+Build+ALIREZATUNEL%0Aon%3A%0A++push%3A%0A++++branches%3A+%5Bmain%5D%0A++++paths%3A+%5B%27ALIREZATUNEL-SOURCE.zip%27%2C+%27SOURCE.sha256%27%2C+%27.github%2Fworkflows%2Fbuild.yml%27%5D%0A++workflow_dispatch%3A%0Apermissions%3A%0A++contents%3A+read%0Aconcurrency%3A%0A++group%3A+alirezatunel-release%0A++cancel-in-progress%3A+false%0Ajobs%3A%0A++build%3A%0A++++strategy%3A%0A++++++fail-fast%3A+false%0A++++++matrix%3A%0A++++++++include%3A%0A++++++++++-+arch%3A+amd64%0A++++++++++++runner%3A+ubuntu-24.04%0A++++++++++++target%3A+x86_64-unknown-linux-musl%0A++++++++++-+arch%3A+arm64%0A++++++++++++runner%3A+ubuntu-24.04-arm%0A++++++++++++target%3A+aarch64-unknown-linux-musl%0A++++runs-on%3A+%24%7B%7B+matrix.runner+%7D%7D%0A++++timeout-minutes%3A+60%0A++++steps%3A%0A++++++-+uses%3A+actions%2Fcheckout%40v4%0A++++++-+name%3A+Verify+and+unpack+corresponding+source%0A++++++++run%3A+%7C%0A++++++++++sha256sum+-c+SOURCE.sha256%0A++++++++++mkdir+source%0A++++++++++python3+-m+zipfile+-e+ALIREZATUNEL-SOURCE.zip+source%0A++++++-+uses%3A+actions%2Fsetup-node%40v4%0A++++++++with%3A%0A++++++++++node-version%3A+%2722%27%0A++++++++++cache%3A+npm%0A++++++++++cache-dependency-path%3A+source%2Fpanel%2Fweb%2Fpackage-lock.json%0A++++++-+uses%3A+actions%2Fsetup-go%40v5%0A++++++++with%3A%0A++++++++++go-version-file%3A+source%2Fengines%2Fbackpack%2Fgo.mod%0A++++++++++cache-dependency-path%3A+source%2Fengines%2Fbackpack%2Fgo.sum%0A++++++-+uses%3A+dtolnay%2Frust-toolchain%40stable%0A++++++++with%3A%0A++++++++++targets%3A+%24%7B%7B+matrix.target+%7D%7D%0A++++++-+uses%3A+Swatinem%2Frust-cache%40v2%0A++++++++with%3A%0A++++++++++workspaces%3A+source%0A++++++++++key%3A+%24%7B%7B+matrix.target+%7D%7D%0A++++++-+run%3A+sudo+apt-get+update+%26%26+sudo+apt-get+install+-y+musl-tools+pkg-config+libssl-dev%0A++++++-+name%3A+Build+web+interface%0A++++++++working-directory%3A+source%2Fpanel%2Fweb%0A++++++++run%3A+npm+ci+--no-audit+--no-fund+%26%26+npm+run+build%0A++++++-+name%3A+Build+native+BackPack+engine%0A++++++++working-directory%3A+source%2Fengines%2Fbackpack%0A++++++++env%3A%0A++++++++++CGO_ENABLED%3A+%270%27%0A++++++++run%3A+%7C%0A++++++++++mkdir+-p+..%2F..%2Fbuild%0A++++++++++go+build+-trimpath+-buildvcs%3Dfalse+-o+..%2F..%2Fbuild%2Falirezatunel-backpack+.%0A++++++-+name%3A+Check+scripts%2C+TLS+setup+and+real+native+probe%0A++++++++working-directory%3A+source%0A++++++++run%3A+%7C%0A++++++++++python3+-m+unittest+discover+-s+tests%2Falirezatunel+-v%0A++++++++++for+f+in+install.sh+scripts%2Ftun+scripts%2Falirezatunel-join%3B+do+bash+-n+%22%24f%22%3B+done%0A++++++-+name%3A+Test+panel+and+real+management+agents%0A++++++++working-directory%3A+source%0A++++++++env%3A%0A++++++++++ALIREZATUNEL_BACKPACK_BINARY%3A+%24%7B%7B+github.workspace+%7D%7D%2Fsource%2Fbuild%2Falirezatunel-backpack%0A++++++++run%3A+cargo+test+--locked+-p+kariz-panel%0A++++++-+name%3A+Build+static+release%0A++++++++working-directory%3A+source%0A++++++++env%3A%0A++++++++++CC%3A+musl-gcc%0A++++++++++CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER%3A+musl-gcc%0A++++++++++CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER%3A+musl-gcc%0A++++++++++RUSTFLAGS%3A+%27-C+target-feature%3D%2Bcrt-static%27%0A++++++++++KARIZ_BUILD_VERSION%3A+%272.5.1-alirezatunel.3%27%0A++++++++run%3A+cargo+build+--release+--locked+--target+%24%7B%7B+matrix.target+%7D%7D+-p+kariz+-p+kariz-panel%0A++++++-+name%3A+Package+fresh+executables%0A++++++++working-directory%3A+source%0A++++++++run%3A+python3+scripts%2Fpackage-runtime.py+--target+%24%7B%7B+matrix.target+%7D%7D+--arch+%24%7B%7B+matrix.arch+%7D%7D%0A++++++-+uses%3A+actions%2Fupload-artifact%40v4%0A++++++++with%3A%0A++++++++++name%3A+runtime-%24%7B%7B+matrix.arch+%7D%7D%0A++++++++++path%3A+source%2Frelease%2F%2A.tar.gz%0A++++++++++if-no-files-found%3A+error%0A++publish%3A%0A++++needs%3A+build%0A++++runs-on%3A+ubuntu-24.04%0A++++permissions%3A%0A++++++contents%3A+write%0A++++steps%3A%0A++++++-+uses%3A+actions%2Fcheckout%40v4%0A++++++-+uses%3A+actions%2Fdownload-artifact%40v4%0A++++++++with%3A%0A++++++++++pattern%3A+runtime-%2A%0A++++++++++path%3A+release%0A++++++++++merge-multiple%3A+true%0A++++++-+name%3A+Publish+only+after+both+architectures+pass%0A++++++++env%3A%0A++++++++++GH_TOKEN%3A+%24%7B%7B+github.token+%7D%7D%0A++++++++run%3A+%7C%0A++++++++++cp+SOURCE.sha256+ALIREZATUNEL-SOURCE.zip+release%2F%0A++++++++++cd+release%0A++++++++++sha256sum+ALIREZATUNEL-linux-%2A.tar.gz+%3E+SHA256SUMS%0A++++++++++test+-s+ALIREZATUNEL-linux-amd64.tar.gz%0A++++++++++test+-s+ALIREZATUNEL-linux-arm64.tar.gz%0A++++++++++tag%3D%22alirezatunel-%24%7BGITHUB_RUN_ID%7D-%24%7BGITHUB_RUN_ATTEMPT%7D%22%0A++++++++++gh+release+create+%22%24tag%22+--repo+%22%24GITHUB_REPOSITORY%22+--target+%22%24GITHUB_SHA%22+--draft+--title+%22ALIREZATUNEL+%24%7BGITHUB_RUN_NUMBER%7D%22+--notes+%27BackPack+panel%2C+trusted+TLS+setup%2C+password+login+and+tun+manager.+Complete+corresponding+source+is+attached.%27+.%2F%2A%0A++++++++++gh+release+edit+%22%24tag%22+--repo+%22%24GITHUB_REPOSITORY%22+--draft%3Dfalse+--latest%0A" target="_blank" rel="noopener">باز کردن فرم آمادهٔ فایل ساخت در گیت‌هاب</a></p><p><small>اگر گیت‌هاب گفت فایل از قبل وجود دارد، نیازی به ساخت مجدد نیست؛ تب Actions را باز کنید. اگر مرورگر متن را پر نکرد، فایل build.yml داخل همین بسته، متن کامل موردنیاز را دارد.</small></p><ol start="3"><li><a href="https://github.com/alirezachatgpt97-coder/ALIREZA-TUNEL1/actions" target="_blank" rel="noopener">Actions</a> را باز کنید. پس از سبز شدن Build ALIREZATUNEL و مرحلهٔ Publish، دستور نصب را اجرا کنید. تا آن زمان خطای نبود Release طبیعی است.</li></ol><pre>curl -fL --retry 3 https://raw.githubusercontent.com/alirezachatgpt97-coder/ALIREZA-TUNEL1/main/bootstrap.sh -o /root/install.sh &amp;&amp; bash /root/install.sh panel</pre><p>این بسته سورس کامل و مسیر ساخت خودکار است؛ باینری جدید پس از موفقیت ساخت در گیت‌هاب منتشر می‌شود.</p><details><summary>مسیر و متن فایل ساخت برای بررسی</summary><p><code>.github/workflows/build.yml</code></p><textarea readonly>name: Build ALIREZATUNEL
+on:
+  push:
+    branches: [main]
+    paths: [&#x27;ALIREZATUNEL-SOURCE.zip&#x27;, &#x27;SOURCE.sha256&#x27;, &#x27;.github/workflows/build.yml&#x27;]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: alirezatunel-release
+  cancel-in-progress: false
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and unpack corresponding source
+        run: |
+          sha256sum -c SOURCE.sha256
+          mkdir source
+          python3 -m zipfile -e ALIREZATUNEL-SOURCE.zip source
+      - uses: actions/setup-node@v4
+        with:
+          node-version: &#x27;22&#x27;
+          cache: npm
+          cache-dependency-path: source/panel/web/package-lock.json
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: source/engines/backpack/go.mod
+          cache-dependency-path: source/engines/backpack/go.sum
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: source
+          key: ${{ matrix.target }}
+      - run: sudo apt-get update &amp;&amp; sudo apt-get install -y musl-tools pkg-config libssl-dev
+      - name: Build web interface
+        working-directory: source/panel/web
+        run: npm ci --no-audit --no-fund &amp;&amp; npm run build
+      - name: Build native BackPack engine
+        working-directory: source/engines/backpack
+        env:
+          CGO_ENABLED: &#x27;0&#x27;
+        run: |
+          mkdir -p ../../build
+          go build -trimpath -buildvcs=false -o ../../build/alirezatunel-backpack .
+      - name: Check scripts, TLS setup and real native probe
+        working-directory: source
+        run: |
+          python3 -m unittest discover -s tests/alirezatunel -v
+          for f in install.sh scripts/tun scripts/alirezatunel-join; do bash -n &quot;$f&quot;; done
+      - name: Test panel and real management agents
+        working-directory: source
+        env:
+          ALIREZATUNEL_BACKPACK_BINARY: ${{ github.workspace }}/source/build/alirezatunel-backpack
+        run: cargo test --locked -p kariz-panel
+      - name: Build static release
+        working-directory: source
+        env:
+          CC: musl-gcc
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+          RUSTFLAGS: &#x27;-C target-feature=+crt-static&#x27;
+          KARIZ_BUILD_VERSION: &#x27;2.5.1-alirezatunel.3&#x27;
+        run: cargo build --release --locked --target ${{ matrix.target }} -p kariz -p kariz-panel
+      - name: Package fresh executables
+        working-directory: source
+        run: python3 scripts/package-runtime.py --target ${{ matrix.target }} --arch ${{ matrix.arch }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runtime-${{ matrix.arch }}
+          path: source/release/*.tar.gz
+          if-no-files-found: error
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: runtime-*
+          path: release
+          merge-multiple: true
+      - name: Publish only after both architectures pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp SOURCE.sha256 ALIREZATUNEL-SOURCE.zip release/
+          cd release
+          sha256sum ALIREZATUNEL-linux-*.tar.gz &gt; SHA256SUMS
+          test -s ALIREZATUNEL-linux-amd64.tar.gz
+          test -s ALIREZATUNEL-linux-arm64.tar.gz
+          tag=&quot;alirezatunel-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}&quot;
+          gh release create &quot;$tag&quot; --repo &quot;$GITHUB_REPOSITORY&quot; --target &quot;$GITHUB_SHA&quot; --draft --title &quot;ALIREZATUNEL ${GITHUB_RUN_NUMBER}&quot; --notes &#x27;BackPack panel, trusted TLS setup, password login and tun manager. Complete corresponding source is attached.&#x27; ./*
+          gh release edit &quot;$tag&quot; --repo &quot;$GITHUB_REPOSITORY&quot; --draft=false --latest
+</textarea></details></main></html>
