@@ -1,0 +1,110 @@
+name: Build ALIREZATUNEL
+on:
+  push:
+    branches: [main]
+    paths: ['ALIREZATUNEL-SOURCE.zip', 'SOURCE.sha256', '.github/workflows/build.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: alirezatunel-release
+  cancel-in-progress: false
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+            target: x86_64-unknown-linux-musl
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and unpack corresponding source
+        run: |
+          sha256sum -c SOURCE.sha256
+          mkdir source
+          python3 -m zipfile -e ALIREZATUNEL-SOURCE.zip source
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: source/panel/web/package-lock.json
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: source/engines/backpack/go.mod
+          cache-dependency-path: source/engines/backpack/go.sum
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: source
+          key: ${{ matrix.target }}
+      - run: sudo apt-get update && sudo apt-get install -y musl-tools pkg-config libssl-dev
+      - name: Build web interface
+        working-directory: source/panel/web
+        run: npm ci --no-audit --no-fund && npm run build
+      - name: Build native BackPack engine
+        working-directory: source/engines/backpack
+        env:
+          CGO_ENABLED: '0'
+        run: |
+          mkdir -p ../../build
+          go build -trimpath -buildvcs=false -o ../../build/alirezatunel-backpack .
+      - name: Check scripts, TLS setup and real native probe
+        working-directory: source
+        run: |
+          python3 -m unittest discover -s tests/alirezatunel -v
+          for f in install.sh scripts/tun scripts/alirezatunel-join; do bash -n "$f"; done
+      - name: Test panel and real management agents
+        working-directory: source
+        env:
+          ALIREZATUNEL_BACKPACK_BINARY: ${{ github.workspace }}/source/build/alirezatunel-backpack
+        run: cargo test --locked -p kariz-panel
+      - name: Build static release
+        working-directory: source
+        env:
+          CC: musl-gcc
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER: musl-gcc
+          RUSTFLAGS: '-C target-feature=+crt-static'
+          KARIZ_BUILD_VERSION: '2.5.1-alirezatunel.3'
+        run: cargo build --release --locked --target ${{ matrix.target }} -p kariz -p kariz-panel
+      - name: Package fresh executables
+        working-directory: source
+        run: python3 scripts/package-runtime.py --target ${{ matrix.target }} --arch ${{ matrix.arch }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: runtime-${{ matrix.arch }}
+          path: source/release/*.tar.gz
+          if-no-files-found: error
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: runtime-*
+          path: release
+          merge-multiple: true
+      - name: Publish only after both architectures pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp SOURCE.sha256 ALIREZATUNEL-SOURCE.zip release/
+          cd release
+          sha256sum ALIREZATUNEL-linux-*.tar.gz > SHA256SUMS
+          test -s ALIREZATUNEL-linux-amd64.tar.gz
+          test -s ALIREZATUNEL-linux-arm64.tar.gz
+          tag="alirezatunel-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --title "ALIREZATUNEL ${GITHUB_RUN_NUMBER}" --notes 'BackPack panel, trusted TLS setup, password login and tun manager. Complete corresponding source is attached.' ./*
+          gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest
